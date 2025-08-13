@@ -1,0 +1,534 @@
+
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>李博宸制作 - 贪吃蛇游戏</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            user-select: none;
+        }
+        
+        body {
+            font-family: Arial, sans-serif;
+            overflow: hidden;
+            transition: background-color 0.3s;
+        }
+        
+        /* 初始界面 */
+        .start-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: #4CAF50;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+            color: white;
+        }
+        
+        .start-title {
+            font-size: 3rem;
+            margin-bottom: 2rem;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        
+        .start-btn {
+            padding: 15px 30px;
+            font-size: 1.2rem;
+            background-color: #388E3C;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+            transition: all 0.3s;
+        }
+        
+        .start-btn:hover {
+            background-color: #2E7D32;
+            transform: translateY(-2px);
+        }
+        
+        .start-btn:disabled {
+            background-color: #A5D6A7;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .input-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        .input-field {
+            padding: 10px;
+            font-size: 1rem;
+            border: 2px solid #388E3C;
+            border-radius: 5px;
+            width: 250px;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+        
+        /* 主菜单 */
+        .main-menu {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: #4CAF50;
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 90;
+            color: white;
+        }
+        
+        .menu-title {
+            font-size: 2.5rem;
+            margin-bottom: 2rem;
+        }
+        
+        .menu-btn {
+            padding: 12px 25px;
+            font-size: 1.1rem;
+            background-color: #388E3C;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 10px;
+            width: 200px;
+            transition: all 0.3s;
+        }
+        
+        .menu-btn:hover {
+            background-color: #2E7D32;
+        }
+        
+        .settings-panel {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background-color: rgba(0,0,0,0.2);
+            padding: 10px;
+            border-radius: 5px;
+        }
+        
+        .theme-toggle {
+            background: none;
+            border: none;
+            color: white;
+            cursor: pointer;
+            font-size: 1rem;
+        }
+        
+        /* 游戏界面 */
+        .game-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 80;
+        }
+        
+        .game-info {
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+            max-width: 600px;
+            padding: 10px;
+            margin-bottom: 10px;
+        }
+        
+        .game-board {
+            position: relative;
+            border: 2px solid #333;
+            background-color: #f0f0f0;
+        }
+        
+        .cell {
+            position: absolute;
+            border: 1px solid #ccc;
+        }
+        
+        .snake {
+            background-color: #4CAF50;
+        }
+        
+        .coin {
+            background-color: #FFD700;
+        }
+        
+        .dark-mode {
+            background-color: #1a1a1a;
+            color: #f0f0f0;
+        }
+        
+        .dark-mode .game-board {
+            background-color: #333;
+        }
+        
+        .dark-mode .cell {
+            border-color: #555;
+        }
+    </style>
+</head>
+<body>
+    <!-- 初始界面 -->
+    <div class="start-screen">
+        <h1 class="start-title">李博宸制作</h1>
+        <button id="startBtn" class="start-btn" disabled>承认李博宸是帅哥开始游戏</button>
+        <div class="input-container">
+            <input type="text" id="inputField" class="input-field" placeholder="请输入验证文字">
+        </div>
+    </div>
+    
+    <!-- 主菜单 -->
+    <div class="main-menu">
+        <h1 class="menu-title">贪吃蛇游戏</h1>
+        <button class="menu-btn" id="startGameBtn">开始游戏</button>
+        <button class="menu-btn" id="howToPlayBtn">游戏说明</button>
+        <button class="menu-btn" id="settingsBtn">设置</button>
+        
+        <div class="settings-panel">
+            <button class="theme-toggle" id="themeToggle">深色模式</button>
+        </div>
+    </div>
+    
+    <!-- 游戏界面 -->
+    <div class="game-container">
+        <div class="game-info">
+            <div>关卡: <span id="levelDisplay">1</span>/91</div>
+            <div>金币: <span id="coinDisplay">0</span></div>
+            <div>时间: <span id="timeDisplay">50</span>秒</div>
+        </div>
+        <div class="game-board" id="gameBoard"></div>
+    </div>
+    
+    <script>
+        // 游戏状态
+        const gameState = {
+            currentLevel: 1,
+            totalLevels: 91,
+            coinsCollected: 0,
+            timeLeft: 0,
+            timer: null,
+            isDarkMode: false,
+            snake: [],
+            direction: null,
+            nextDirection: null,
+            coinPosition: null,
+            visitedCells: new Set(),
+            allCells: new Set(),
+            cellSize: 30,
+            gridSize: 2,
+            gameBoard: document.getElementById('gameBoard'),
+            levelDisplay: document.getElementById('levelDisplay'),
+            coinDisplay: document.getElementById('coinDisplay'),
+            timeDisplay: document.getElementById('timeDisplay')
+        };
+        
+        // DOM元素
+        const startScreen = document.querySelector('.start-screen');
+        const mainMenu = document.querySelector('.main-menu');
+        const gameContainer = document.querySelector('.game-container');
+        const startBtn = document.getElementById('startBtn');
+        const inputField = document.getElementById('inputField');
+        const startGameBtn = document.getElementById('startGameBtn');
+        const themeToggle = document.getElementById('themeToggle');
+        
+        // 初始化游戏
+        function initGame() {
+            // 初始界面事件
+            inputField.addEventListener('input', function() {
+                startBtn.disabled = this.value !== '李博宸是帅哥';
+            });
+            
+            startBtn.addEventListener('click', function() {
+                startScreen.style.display = 'none';
+                mainMenu.style.display = 'flex';
+            });
+            
+            // 主菜单事件
+            startGameBtn.addEventListener('click', function() {
+                mainMenu.style.display = 'none';
+                gameContainer.style.display = 'flex';
+                startLevel(1);
+            });
+            
+            // 主题切换
+            themeToggle.addEventListener('click', function() {
+                gameState.isDarkMode = !gameState.isDarkMode;
+                document.body.classList.toggle('dark-mode', gameState.isDarkMode);
+                themeToggle.textContent = gameState.isDarkMode ? '浅色模式' : '深色模式';
+            });
+            
+            // 键盘控制
+            document.addEventListener('keydown', function(e) {
+                switch(e.key.toLowerCase()) {
+                    case 'w':
+                    case 'arrowup':
+                        if (gameState.direction !== 'down') gameState.nextDirection = 'up';
+                        break;
+                    case 's':
+                    case 'arrowdown':
+                        if (gameState.direction !== 'up') gameState.nextDirection = 'down';
+                        break;
+                    case 'a':
+                    case 'arrowleft':
+                        if (gameState.direction !== 'right') gameState.nextDirection = 'left';
+                        break;
+                    case 'd':
+                    case 'arrowright':
+                        if (gameState.direction !== 'left') gameState.nextDirection = 'right';
+                        break;
+                }
+            });
+            
+            // 禁止复制粘贴
+            inputField.addEventListener('paste', function(e) {
+                e.preventDefault();
+            });
+            inputField.addEventListener('copy', function(e) {
+                e.preventDefault();
+            });
+            inputField.addEventListener('cut', function(e) {
+                e.preventDefault();
+            });
+        }
+        
+        // 开始关卡
+        function startLevel(level) {
+            gameState.currentLevel = level;
+            gameState.coinsCollected = 0;
+            
+            // 计算网格大小
+            const levelTens = Math.floor(level / 10);
+            gameState.gridSize = levelTens + 2;
+            if (level === 91) gameState.gridSize = 11;
+            
+            // 计算时间
+            if (level === 91) {
+                gameState.timeLeft = 55 * 60; // 55分钟
+            } else {
+                gameState.timeLeft = 50 + (level - 1) * 45;
+            }
+            
+            // 更新显示
+            gameState.levelDisplay.textContent = level;
+            gameState.coinDisplay.textContent = '0';
+            updateTimeDisplay();
+            
+            // 创建游戏板
+            createGameBoard();
+            
+            // 初始化蛇
+            initSnake();
+            
+            // 生成第一个金币
+            generateCoin();
+            
+            // 开始计时器
+            if (gameState.timer) clearInterval(gameState.timer);
+            gameState.timer = setInterval(updateGame, 1000);
+        }
+        
+        // 创建游戏板
+        function createGameBoard() {
+            gameState.gameBoard.innerHTML = '';
+            gameState.gameBoard.style.width = `${gameState.gridSize * gameState.cellSize}px`;
+            gameState.gameBoard.style.height = `${gameState.gridSize * gameState.cellSize}px`;
+            
+            gameState.allCells.clear();
+            
+            for (let y = 0; y < gameState.gridSize; y++) {
+                for (let x = 0; x < gameState.gridSize; x++) {
+                    const cell = document.createElement('div');
+                    cell.className = 'cell';
+                    cell.style.width = `${gameState.cellSize}px`;
+                    cell.style.height = `${gameState.cellSize}px`;
+                    cell.style.left = `${x * gameState.cellSize}px`;
+                    cell.style.top = `${y * gameState.cellSize}px`;
+                    gameState.gameBoard.appendChild(cell);
+                    gameState.allCells.add(`${x},${y}`);
+                }
+            }
+        }
+        
+        // 初始化蛇
+        function initSnake() {
+            gameState.snake = [];
+            gameState.visitedCells.clear();
+            gameState.direction = null;
+            gameState.nextDirection = null;
+            
+            // 蛇初始位置在中心
+            const center = Math.floor(gameState.gridSize / 2);
+            const head = { x: center, y: center };
+            gameState.snake.push(head);
+            gameState.visitedCells.add(`${head.x},${head.y}`);
+            
+            updateSnakeDisplay();
+        }
+        
+        // 更新蛇显示
+        function updateSnakeDisplay() {
+            // 清除所有蛇和金币的样式
+            document.querySelectorAll('.cell').forEach(cell => {
+                cell.classList.remove('snake', 'coin');
+            });
+            
+            // 更新蛇的样式
+            gameState.snake.forEach(segment => {
+                const cell = document.querySelector(`.cell[style*="left: ${segment.x * gameState.cellSize}px"][style*="top: ${segment.y * gameState.cellSize}px"]`);
+                if (cell) cell.classList.add('snake');
+            });
+            
+            // 更新金币样式
+            if (gameState.coinPosition) {
+                const coinCell = document.querySelector(`.cell[style*="left: ${gameState.coinPosition.x * gameState.cellSize}px"][style*="top: ${gameState.coinPosition.y * gameState.cellSize}px"]`);
+                if (coinCell) coinCell.classList.add('coin');
+            }
+        }
+        
+        // 生成金币
+        function generateCoin() {
+            // 找出所有未访问的单元格
+            const unvisitedCells = [...gameState.allCells].filter(
+                cell => !gameState.visitedCells.has(cell)
+            );
+            
+            if (unvisitedCells.length === 0) {
+                // 所有单元格都访问过了，关卡完成
+                completeLevel();
+                return;
+            }
+            
+            // 随机选择一个未访问的单元格
+            const randomCell = unvisitedCells[Math.floor(Math.random() * unvisitedCells.length)];
+            const [x, y] = randomCell.split(',').map(Number);
+            
+            gameState.coinPosition = { x, y };
+            updateSnakeDisplay();
+        }
+        
+        // 更新游戏状态
+        function updateGame() {
+            // 更新时间
+            gameState.timeLeft--;
+            updateTimeDisplay();
+            
+            if (gameState.timeLeft <= 0) {
+                // 时间到，游戏结束
+                gameOver();
+                return;
+            }
+            
+            // 更新方向
+            if (gameState.nextDirection) {
+                gameState.direction = gameState.nextDirection;
+                gameState.nextDirection = null;
+            }
+            
+            if (!gameState.direction) return;
+            
+            // 移动蛇
+            const head = { ...gameState.snake[0] };
+            
+            switch (gameState.direction) {
+                case 'up':
+                    head.y--;
+                    break;
+                case 'down':
+                    head.y++;
+                    break;
+                case 'left':
+                    head.x--;
+                    break;
+                case 'right':
+                    head.x++;
+                    break;
+            }
+            
+            // 检查边界
+            if (head.x < 0 || head.x >= gameState.gridSize || head.y < 0 || head.y >= gameState.gridSize) {
+                // 碰到边界，不移动
+                return;
+            }
+            
+            // 检查是否吃到金币
+            if (gameState.coinPosition && head.x === gameState.coinPosition.x && head.y === gameState.coinPosition.y) {
+                // 吃到金币
+                gameState.coinsCollected++;
+                gameState.coinDisplay.textContent = gameState.coinsCollected;
+                gameState.visitedCells.add(`${head.x},${head.y}`);
+                
+                // 蛇增长
+                gameState.snake.unshift(head);
+                
+                // 生成新金币
+                gameState.coinPosition = null;
+                generateCoin();
+            } else {
+                // 正常移动
+                gameState.snake.unshift(head);
+                gameState.snake.pop();
+            }
+            
+            updateSnakeDisplay();
+        }
+        
+        // 更新时间显示
+        function updateTimeDisplay() {
+            const minutes = Math.floor(gameState.timeLeft / 60);
+            const seconds = gameState.timeLeft % 60;
+            gameState.timeDisplay.textContent = `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+        }
+        
+        // 完成关卡
+        function completeLevel() {
+            clearInterval(gameState.timer);
+            
+            if (gameState.currentLevel === gameState.totalLevels) {
+                alert('恭喜你通关了所有关卡！');
+                gameContainer.style.display = 'none';
+                mainMenu.style.display = 'flex';
+            } else {
+                alert(`恭喜完成第 ${gameState.currentLevel} 关！准备进入下一关...`);
+                startLevel(gameState.currentLevel + 1);
+            }
+        }
+        
+        // 游戏结束
+        function gameOver() {
+            clearInterval(gameState.timer);
+            alert(`时间到！游戏结束。你在第 ${gameState.currentLevel} 关收集了 ${gameState.coinsCollected} 个金币。`);
+            gameContainer.style.display = 'none';
+            mainMenu.style.display = 'flex';
+        }
+        
+        // 初始化游戏
+        window.onload = initGame;
+    </script>
+</body>
+</html>
+<code_end>
